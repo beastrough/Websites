@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test junior frontend</title>
+    <link rel="shortcut icon" type="image/svg" href="./img/favicon.svg">
+</head>
+
+<body>
+    <div class="search">
+        <input type="text" id="submit_data">
+        <button type="submit" id="submit_button">Submit</button>
+    </div>
+    <div class="controls"></div>
+    <style>
+        .search {
+            margin-bottom: 10px;
+        }
+
+        .cards-container {
+            display: none;
+            margin-bottom: 10px;
+            padding: 5px;
+            max-width: 90%;
+        }
+
+        .cards-container:last-child {
+            margin: 0;
+        }
+
+        .price-container {
+            margin-right: 2%;
+            padding: 5px;
+            width: 30%;
+            border: 1px solid red;
+        }
+
+        .price-container__content {
+            padding: 5px;
+            border: 1px solid blue;
+        }
+    </style>
+    <script>
+        (function () {
+            document.getElementById('submit_button').addEventListener('click', makeVariable);
+            function makeVariable() {
+                var varString = document.getElementById('submit_data').value;
+                async function tvoyaFunctiya() {
+                    var myFile = await fetch('https://corporate-marketing-backend.skyeng.ru/landing/public/v2/prices/by-preferred-link/' + varString);
+                    var jsonFile = await myFile.json();
+                    var search1 = 'english_adult_not_native_speaker';
+                    var search2 = 'english_adult_native_speaker';
+                    var search3 = 'english_adult_not_native_speaker_premium';
+                    var search4 = 'english_adult_not_native_speaker_partial_auto_lesson';
+                    var result = jsonFile.data.filter(function (el) {
+                        return el.serviceTypeKey.indexOf(search1) > -1 || el.serviceTypeKey.indexOf(search2) > -1 || el.serviceTypeKey.indexOf(search3) > -1 || el.serviceTypeKey.indexOf(search4) > -1;//fieldName - поле по которому нужно фильтровать
+                    });
+
+                    console.log(result[0].positions[2]);
+
+                    for (var i = 0; i < result.length; i++) {
+                        var btn = document.createElement('button');
+                        btn.className = "button ";
+                        document.body.querySelector('div.controls').append(btn);
+                        var div = document.createElement('div');
+                        div.className = "cards-container";
+                        document.body.append(div);
+                        for (var j = 0; j < result[i].positions.length; j++) {
+                            var divContent = document.createElement('div');
+                            divContent.className = "price-container";
+                            document.body.querySelectorAll('div.cards-container').forEach(function (el) {
+                                el.append(divContent);
+                                if (result[i].positions[j].cost >= result[i].positions[j].costWithoutDiscount) {
+                                    result[i].positions[j].costWithoutDiscount = "";
+                                };
+                            });
+                        }
+
+                        switch (i) {
+                            case 0:
+                              btn.innerHTML = "Англоязычный преподаватель";
+                              btn.addEventListener('click', function () {
+                                document.querySelectorAll('.cards-container')[0].style.display = 'block';
+                                document.querySelectorAll('.cards-container')[1].style.display = 'none';
+                                document.querySelectorAll('.cards-container')[2].style.display = 'none';
+                                document.querySelectorAll('.cards-container')[3].style.display = 'none';
+                              });
+                              break;
+                            case 1:
+                              btn.innerHTML = "Русскоязычный преподаватель";
+                              btn.addEventListener('click', function () {
+                                document.querySelectorAll('.cards-container')[0].style.display = 'none';
+                                document.querySelectorAll('.cards-container')[1].style.display = 'block';
+                                document.querySelectorAll('.cards-container')[2].style.display = 'none';
+                                document.querySelectorAll('.cards-container')[3].style.display = 'none';
+                              });
+                              break;
+                            case 2:
+                              btn.innerHTML = "Дополнительная практика";
+                              btn.addEventListener('click', function () {
+                                document.querySelectorAll('.cards-container')[0].style.display = 'none';
+                                document.querySelectorAll('.cards-container')[1].style.display = 'none';
+                                document.querySelectorAll('.cards-container')[2].style.display = 'block';
+                                document.querySelectorAll('.cards-container')[3].style.display = 'none';
+                              });
+                              break;
+                            case 3:
+                              btn.innerHTML = "Премиум тариф";
+                              btn.addEventListener('click', function () {
+                                document.querySelectorAll('.cards-container')[0].style.display = 'none';
+                                document.querySelectorAll('.cards-container')[1].style.display = 'none';
+                                document.querySelectorAll('.cards-container')[2].style.display = 'none';
+                                document.querySelectorAll('.cards-container')[3].style.display = 'block';
+                              });
+                              break;
+                        }
+                    }
+
+                    for (var i = 0; i < result.length; i++) {
+                        for (var j = 0; j < result[i].positions.length; j++) {
+                            for (var k = 0; k < 4; k++) {
+                                switch (k) {
+                                    case 0:
+                                        var divContentItem = document.createElement('div');
+                                        divContentItem.className = "price-container__content";
+                                        document.body.querySelectorAll('div.cards-container')[i].querySelectorAll('div.price-container')[j].append(divContentItem);
+                                        divContentItem.innerHTML = JSON.stringify(result[i].positions[j].quantity);
+                                        break;
+                                    case 1:
+                                        var divContentItem = document.createElement('div');
+                                        divContentItem.className = "price-container__content";
+                                        document.body.querySelectorAll('div.cards-container')[i].querySelectorAll('div.price-container')[j].append(divContentItem);
+                                        if ((result[i].positions[j].costWithoutDiscount > result[i].positions[j].cost) && (result[i].positions[j].quantity > 0)) {
+                                          divContentItem.innerHTML = JSON.stringify(result[i].positions[j].costWithoutDiscount / result[i].positions[j].quantity) + " " + JSON.stringify(result[i].positions[j].currency);
+                                        } else {
+                                            divContentItem.style.display = "none";
+                                        }
+                                        break;
+                                    case 2:
+                                        var divContentItem = document.createElement('div');
+                                        divContentItem.className = "price-container__content";
+                                        document.body.querySelectorAll('div.cards-container')[i].querySelectorAll('div.price-container')[j].append(divContentItem);
+                                        if ((result[i].positions[j].costWithoutDiscount > result[i].positions[j].cost) && (result[i].positions[j].quantity > 0)) {
+                                          divContentItem.innerHTML = JSON.stringify(result[i].positions[j].cost / result[i].positions[j].quantity) + " " + JSON.stringify(result[i].positions[j].currency) + " за занятие";
+                                        } else if (result[i].positions[j].quantity > 0) {
+                                            divContentItem.innerHTML = JSON.stringify(result[i].positions[j].cost / result[i].positions[j].quantity) + " " + JSON.stringify(result[i].positions[j].currency) + " за занятие";
+                                        }
+                                        break;
+                                    case 3:
+                                        if (result[i].positions[j].cost != '' || result[i].positions[j].cost != 'undefined') {
+                                            var divContentItem = document.createElement('div');
+                                            divContentItem.className = "price-container__content";
+                                            document.body.querySelectorAll('div.cards-container')[i].querySelectorAll('div.price-container')[j].append(divContentItem);
+                                            if (result[i].positions[j].costWithoutDiscount > result[i].positions[j].cost) {
+                                            divContentItem.innerHTML = "Экономия " + JSON.stringify(result[i].positions[j].costWithoutDiscount - result[i].positions[j].cost) + " " + JSON.stringify(result[i].positions[j].currency) + " за пакет";
+                                        } else {
+                                            divContentItem.style.display = "none";
+                                        }
+                                        }
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    document.querySelectorAll('.cards-container')
+                };
+                tvoyaFunctiya();
+                return 0;
+            }
+        })();
+
+    </script>
+</body>
+
+</html>
